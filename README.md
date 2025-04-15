@@ -35,7 +35,8 @@ This collection provides Ansible modules to manage Hostinger Virtual Private Ser
 
 - Ansible Core versions >= 2.13
 - Hostinger API Token (bearer) - obtainable from your Hostinger account under the API section
-- A valid payment method added to your Hostinger account — either Google Pay or PayPal
+
+Note: A valid payment method (such as Google Pay or PayPal) added to your Hostinger account is optional, and only required when provisioning new resources through the API. If you're using this collection to manage existing VPS instances, no payment method is needed.
 
 ## Usage
 
