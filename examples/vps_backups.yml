@@ -1,0 +1,15 @@
+- name: Manage Hostinger VPS backups
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: "{{ backup_action | capitalize }} backup"
+      hostinger.vps.hostinger_vps_backup:
+        token: "{{ hostinger_token }}"
+        virtual_machine_id: "{{ vm_id }}"
+        state: "{{ backup_action }}"
+        backup_id: "{{ backup_id | default(omit) }}"
+      register: backup_result
+
+    - name: Show backup result
+      debug:
+        var: backup_result.backup

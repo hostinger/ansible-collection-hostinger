@@ -1,0 +1,19 @@
+- name: Provision a new Hostinger VPS
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create and set up a new VPS
+      hostinger.vps.hostinger_vps_provision:
+        token: "{{ hostinger_token }}"
+        payment_method_id: "{{ payment_method_id }}"
+        item_id: "{{ item_id }}"
+        template_id: "{{ template_id }}"
+        data_center_id: "{{ data_center_id }}"
+        hostname: "{{ hostname | default(omit) }}"
+        password: "{{ password }}"
+        coupons: "{{ coupons | default([]) }}"
+      register: result
+
+    - name: Show VPS details
+      debug:
+        var: result.vps_details

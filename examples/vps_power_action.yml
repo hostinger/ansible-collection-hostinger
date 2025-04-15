@@ -1,0 +1,14 @@
+- name: Perform power action on Hostinger VPS
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Power action
+      hostinger.vps.hostinger_vps_power:
+        token: "{{ hostinger_token }}"
+        virtual_machine_id: "{{ vm_id }}"
+        action: "{{ action }}"
+      register: result
+
+    - name: Show API response
+      debug:
+        var: result.response

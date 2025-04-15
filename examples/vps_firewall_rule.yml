@@ -1,0 +1,16 @@
+- name: Manage firewall rules
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: "{{ rule_action | capitalize }} firewall rule"
+      hostinger.vps.hostinger_vps_firewall_rule:
+        token: "{{ hostinger_token }}"
+        firewall_id: "{{ firewall_id }}"
+        rule_id: "{{ rule_id | default(omit) }}"
+        rule: "{{ rule | default(omit) }}"
+        state: "{{ rule_action }}"
+      register: rule_result
+
+    - name: Show rule result
+      debug:
+        var: rule_result.rule

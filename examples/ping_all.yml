@@ -1,0 +1,13 @@
+- name: Ping all VPS IPs
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Ping {{ ansible_host }}
+      ansible.builtin.command: "ping -c 2 {{ ansible_host }}"
+      register: ping_result
+      ignore_errors: true
+
+    - name: Show ping results
+      debug:
+        var: ping_result.stdout_lines
+

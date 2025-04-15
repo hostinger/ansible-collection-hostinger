@@ -1,0 +1,15 @@
+- name: Manage firewalls
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Run firewall action
+      hostinger.vps.hostinger_vps_firewall:
+        token: "{{ hostinger_token }}"
+        state: "{{ firewall_state }}"
+        firewall_id: "{{ firewall_id | default(omit) }}"
+        name: "{{ firewall_name | default(omit) }}"
+      register: result
+
+    - name: Show result
+      debug:
+        var: result.firewall

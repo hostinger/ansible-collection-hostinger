@@ -1,0 +1,2 @@
+plugin: hostinger.vps.inventory
+token: "{{ hostinger_token }}"

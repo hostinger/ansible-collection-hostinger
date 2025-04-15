@@ -1,0 +1,15 @@
+- name: Retrieve Hostinger VPS metrics
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Get VPS metrics
+      hostinger.vps.hostinger_vps_metrics:
+        token: "{{ hostinger_token }}"
+        virtual_machine_id: "{{ vm_id }}"
+        date_from: "{{ date_from }}"
+        date_to: "{{ date_to }}"
+      register: metrics_result
+
+    - name: Show full metrics
+      debug:
+        var: metrics_result.metrics

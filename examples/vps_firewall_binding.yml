@@ -1,0 +1,15 @@
+- name: Manage firewall binding for Hostinger VPS
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: "{{ binding_action | capitalize }} firewall"
+      hostinger.vps.hostinger_vps_firewall_binding:
+        token: "{{ hostinger_token }}"
+        firewall_id: "{{ firewall_id }}"
+        virtual_machine_id: "{{ vm_id }}"
+        state: "{{ binding_action }}"
+      register: result
+
+    - name: Show response
+      debug:
+        var: result.result

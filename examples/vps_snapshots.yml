@@ -1,0 +1,14 @@
+- name: Manage VPS snapshots
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: "{{ snapshot_action | capitalize }} snapshot"
+      hostinger.vps.hostinger_vps_snapshot:
+        token: "{{ hostinger_token }}"
+        virtual_machine_id: "{{ vm_id }}"
+        state: "{{ snapshot_action }}"
+      register: snapshot_result
+
+    - name: Print snapshot result
+      debug:
+        var: snapshot_result.snapshot

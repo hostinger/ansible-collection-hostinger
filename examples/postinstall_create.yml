@@ -1,0 +1,11 @@
+- name: Create a Hostinger post-install script
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create script
+      hostinger.vps.hostinger_vps_postinstall_create:
+        token: "{{ hostinger_token }}"
+        name: "Install Docker"
+        content: >
+          #!/bin/bash
+          apt update && apt install -y docker.io

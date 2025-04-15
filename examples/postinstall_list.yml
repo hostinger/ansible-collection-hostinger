@@ -1,0 +1,12 @@
+- name: List all Hostinger post-install scripts
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: List scripts
+      hostinger.vps.hostinger_vps_postinstall_list:
+        token: "{{ hostinger_token }}"
+      register: scripts_output
+
+    - name: Show script list
+      debug:
+        var: scripts_output.scripts

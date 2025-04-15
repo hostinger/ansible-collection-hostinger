@@ -1,0 +1,8 @@
+namespace: hostinger
+name: vps
+version: 1.0.0
+authors: ["Hostinger Dev Team"]
+description: Ansible collection to manage Hostinger VPS via Hostinger Public API.
+license_file: GPL-3.0
+readme: README.md
+repository: "https://github.com/hostinger/ansible-collection-hostinger"

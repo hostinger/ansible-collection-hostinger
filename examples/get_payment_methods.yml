@@ -1,0 +1,22 @@
+- name: Get Hostinger payment methods
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Retrieve payment methods
+      hostinger.vps.hostinger_vps_payment_method_info:
+        token: "{{ hostinger_token }}"
+      register: result
+
+    - name: Show raw result (optional debug)
+      debug:
+        var: result.methods
+
+    - name: Show available payment method info
+      debug:
+        msg: >-
+          ID: {{ item.id }},
+          Name: {{ item.name }},
+          Method: {{ item.payment_method }},
+          Identifier: {{ item.identifier }},
+          Default: {{ item.is_default }}
+      loop: "{{ result.methods }}"

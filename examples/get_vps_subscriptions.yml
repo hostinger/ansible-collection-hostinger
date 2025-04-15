@@ -1,0 +1,12 @@
+- name: Get Hostinger subscription info
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Fetch subscriptions
+      hostinger.vps.hostinger_vps_subscription_info:
+        token: "{{ hostinger_token }}"
+      register: subscription_result
+
+    - name: Show subscription data
+      debug:
+        var: subscription_result.subscriptions

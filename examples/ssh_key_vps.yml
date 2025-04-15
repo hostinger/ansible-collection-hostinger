@@ -1,0 +1,16 @@
+- name: Manage SSH keys for Hostinger VPS
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: "Perform action: {{ ssh_key_action }}"
+      hostinger.vps.hostinger_vps_ssh_key:
+        token: "{{ hostinger_token }}"
+        state: "{{ ssh_key_action }}"
+        name: "{{ ssh_key_name | default(omit) }}"
+        key: "{{ key | default(omit) }}"
+        public_key_id: "{{ public_key_id | default(omit) }}"
+      register: key_result
+
+    - name: Show result
+      debug:
+        var: key_result.ssh_key

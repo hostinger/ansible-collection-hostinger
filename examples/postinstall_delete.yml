@@ -1,0 +1,8 @@
+- name: Delete a Hostinger post-install script
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Delete script
+      hostinger.vps.hostinger_vps_postinstall_delete:
+        token: "{{ hostinger_token }}"
+        post_install_script_id: "{{ script_id }}"

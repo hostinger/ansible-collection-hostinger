@@ -1,0 +1,9 @@
+- name: Set hostname on Hostinger VPS
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Set a custom hostname
+      hostinger.vps.hostinger_vps_hostname:
+        token: "{{ hostinger_token }}"
+        virtual_machine_id: "{{ vm_id }}"
+        hostname: "custom.myhostinger.domain"

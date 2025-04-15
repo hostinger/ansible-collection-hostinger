@@ -1,0 +1,13 @@
+- name: Get VPS info
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Fetch VPS details
+      hostinger.vps.hostinger_vps_get_info:
+        token: "{{ hostinger_token }}"
+        virtual_machine_id: "{{ vm_id }}"
+      register: result
+
+    - name: Show result
+      debug:
+        var: result.vps

@@ -1,0 +1,8 @@
+- name: Reset hostname and PTR on Hostinger VPS
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Reset hostname
+      hostinger.vps.hostinger_vps_hostname:
+        token: "{{ hostinger_token }}"
+        virtual_machine_id: "{{ vm_id }}"

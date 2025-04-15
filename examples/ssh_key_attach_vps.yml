@@ -1,0 +1,14 @@
+- name: Attach SSH keys to Hostinger VPS
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Attach SSH key(s)
+      hostinger.vps.hostinger_vps_ssh_key_binding:
+        token: "{{ hostinger_token }}"
+        virtual_machine_id: "{{ vm_id }}"
+        public_key_ids: "{{ ssh_key_ids }}"
+      register: result
+
+    - name: Show result
+      debug:
+        var: result.result
