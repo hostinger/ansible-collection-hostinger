@@ -31,6 +31,11 @@ This collection provides Ansible modules to manage Hostinger Virtual Private Ser
 | --------------------------- | ------------------------------------------- |
 | `hostinger.vps.hostinger`   | Dynamic inventory plugin for VPS instances  |
 
+## Requirements
+
+- Ansible Core versions >= 2.13
+- Hostinger API Token (bearer) - obtainable from your Hostinger account under the API section
+- A valid payment method added to your Hostinger account — either Google Pay or PayPal
 
 ## Usage
 
