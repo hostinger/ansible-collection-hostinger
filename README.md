@@ -36,13 +36,20 @@ This collection provides Ansible modules to manage Hostinger Virtual Private Ser
 
 Install this collection and use the modules in your Ansible playbooks to control VPS lifecycle and post-install scripts.
 
-```bash
-# Install from Ansible Galaxy (once published)
-ansible-galaxy collection install hostinger.vps
+### 📦 Install from Ansible Galaxy (once published)
 
-# Or install locally for development
+```bash
+ansible-galaxy collection install hostinger.vps
+```
+
+### 🛠️ Install Locally for Development
+
+```bash
 ansible-galaxy collection build
-ansible-galaxy collection install hostinger-vps-*.tar.gz 
+ansible-galaxy collection install hostinger-vps-*.tar.gz
+```
+
+---
 
 ## Contributing
 
