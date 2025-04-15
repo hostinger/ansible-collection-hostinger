@@ -1,17 +1,37 @@
 - name: Provision a new Hostinger VPS
   hosts: localhost
   gather_facts: false
+
   tasks:
+    - name: Retrieve payment methods
+      hostinger.vps.hostinger_vps_payment_method_info:
+        token: "{{ hostinger_token }}"
+      register: payment_result
+
+    - name: Set default payment method if available
+      set_fact:
+        default_payment_method_id: >-
+          {{ payment_result.methods
+             | selectattr('is_default', 'equalto', true)
+             | map(attribute='id') | list | first | default(None) }}
+
+    - name: Decide on final payment method ID
+      set_fact:
+        final_payment_method_id: "{{ payment_method_id | default(default_payment_method_id) }}"
+
+    - name: Fail if no payment method found
+      fail:
+        msg: "No payment method available: provide one manually or ensure an account default exists."
+      when: final_payment_method_id is not defined
+
     - name: Create and set up a new VPS
       hostinger.vps.hostinger_vps_provision:
         token: "{{ hostinger_token }}"
-        payment_method_id: "{{ payment_method_id }}"
+        payment_method_id: "{{ final_payment_method_id }}"
         item_id: "{{ item_id }}"
         template_id: "{{ template_id }}"
         data_center_id: "{{ data_center_id }}"
-        hostname: "{{ hostname | default(omit) }}"
         password: "{{ password }}"
-        coupons: "{{ coupons | default([]) }}"
       register: result
 
     - name: Show VPS details

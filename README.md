@@ -43,3 +43,10 @@ ansible-galaxy collection install hostinger.vps
 # Or install locally for development
 ansible-galaxy collection build
 ansible-galaxy collection install hostinger-vps-*.tar.gz 
+
+## Contributing
+
+Pull requests and issues are welcome.
+
+If you encounter any bugs or unexpected behavior, please [open an issue](https://github.com/hostinger/ansible-collection-hostinger/issues).  
+Our team actively monitors reports and strives to address them promptly to ensure a stable and reliable experience for all users.
