@@ -42,7 +42,7 @@ Note: A valid payment method (such as Google Pay or PayPal) added to your Hostin
 
 Install this collection and use the modules in your Ansible playbooks to control VPS lifecycle and post-install scripts.
 
-### 📦 Install from Ansible Galaxy (once published)
+### 📦 Install from Ansible Galaxy
 
 ```bash
 ansible-galaxy collection install hostinger.vps
