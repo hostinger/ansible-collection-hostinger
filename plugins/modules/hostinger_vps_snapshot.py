@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 import requests
 
 DOCUMENTATION = '''
@@ -81,10 +82,7 @@ def main():
     vm_id = module.params['virtual_machine_id']
     state = module.params['state']
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = get_headers(token)
 
     base_url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/snapshot"
 

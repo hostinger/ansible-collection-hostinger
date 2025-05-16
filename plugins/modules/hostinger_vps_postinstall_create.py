@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 import requests
 
 DOCUMENTATION = r"""
@@ -65,10 +66,9 @@ def main():
     if module.check_mode:
         module.exit_json(changed=True, msg="Would create post-install script in check mode.")
 
-    headers = {
-        "Authorization": f"Bearer {module.params['token']}",
-        "Content-Type": "application/json"
-    }
+    token = module.params["token"]
+    
+    headers = get_headers(token)
 
     payload = {
         "name": module.params['name'],

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 import requests
 
 DOCUMENTATION = '''
@@ -79,10 +80,7 @@ def main():
     action = module.params['action']
 
     url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/{action}"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = get_headers(token)
 
     if module.check_mode:
         module.exit_json(changed=False, msg=f"[CHECK_MODE] Would send {action} to VM {vm_id}")
