@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 import requests
 import re
 
@@ -99,10 +100,7 @@ def main():
     rule = module.params.get("rule")
     state = module.params["state"]
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = get_headers(token)
 
     valid_protocols = [
         'TCP', 'UDP', 'ICMP', 'ICMPv6', 'GRE', 'ESP', 'AH',

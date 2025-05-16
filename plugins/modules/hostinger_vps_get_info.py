@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 import requests
 
 DOCUMENTATION = '''
@@ -47,10 +48,9 @@ def main():
         supports_check_mode=True
     )
 
-    headers = {
-        'Authorization': f"Bearer {module.params['token']}",
-        'Content-Type': 'application/json'
-    }
+    token = module.params["token"]
+    
+    headers = get_headers(token)
 
     url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{module.params['virtual_machine_id']}"
 

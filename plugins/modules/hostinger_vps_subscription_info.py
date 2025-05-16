@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 import requests
 
 DOCUMENTATION = '''
@@ -39,10 +40,7 @@ def main():
     module = AnsibleModule(argument_spec=module_args)
     token = module.params["token"]
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = get_headers(token)
 
     url = "https://developers.hostinger.com/api/billing/v1/subscriptions"
 

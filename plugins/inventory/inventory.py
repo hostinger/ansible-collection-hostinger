@@ -7,6 +7,7 @@ import requests
 from ansible.errors import AnsibleError
 from ansible.plugins.inventory import BaseInventoryPlugin
 from ansible.module_utils._text import to_text
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 
 DOCUMENTATION = r'''
 name: hostinger.vps.inventory
@@ -39,9 +40,7 @@ class InventoryModule(BaseInventoryPlugin):
         if not token:
             raise AnsibleError("Missing required 'token' in Hostinger inventory config file.")
 
-        headers = {
-            "Authorization": f"Bearer {token}"
-        }
+        headers = get_headers(token)
 
         try:
             resp = requests.get("https://developers.hostinger.com/api/vps/v1/virtual-machines", headers=headers)
