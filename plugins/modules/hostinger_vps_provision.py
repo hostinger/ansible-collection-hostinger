@@ -1,5 +1,6 @@
 # Ansible module to provision a Hostinger VPS via API
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 import requests
 
 DOCUMENTATION = r'''
@@ -87,10 +88,7 @@ def main():
     hostname = module.params.get("hostname")
     coupons = module.params["coupons"]
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = get_headers(token)
     base_url = "https://developers.hostinger.com"
 
     # Step 1: Create Order

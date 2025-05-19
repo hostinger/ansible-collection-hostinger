@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
 import requests
 
 DOCUMENTATION = '''
@@ -78,10 +79,7 @@ def main():
     firewall_id = module.params.get('firewall_id')
     name = module.params.get('name')
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = get_headers(token)
 
     try:
         if state == 'get':
