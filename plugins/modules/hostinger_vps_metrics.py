@@ -1,8 +1,16 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
 
 DOCUMENTATION = '''
 ---
@@ -12,10 +20,6 @@ description:
   - Retrieves resource usage metrics (CPU, memory, bandwidth, etc.) for a specific Hostinger virtual machine.
   - Requires a date range using ISO 8601 format for both start and end.
 options:
-  token:
-    description: Hostinger API token
-    required: true
-    type: str
   virtual_machine_id:
     description: ID of the VPS to retrieve metrics for
     required: true
@@ -28,8 +32,10 @@ options:
     description: ISO8601 end datetime (e.g., 2025-04-08T00:00:00Z)
     required: true
     type: str
+extends_documentation_fragment:
+  - hostinger.vps.api
 author:
-  - Hostinger Dev Team
+  - Hostinger Dev Team (@hostinger)
 '''
 
 EXAMPLES = '''
@@ -48,9 +54,10 @@ metrics:
   type: dict
 '''
 
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
+    module_args = api_argument_spec()
+    module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         date_from=dict(type='str', required=True),
         date_to=dict(type='str', required=True)
@@ -61,26 +68,19 @@ def main():
         supports_check_mode=True
     )
 
-    token = module.params["token"]
-    
-    headers = get_headers(token)
-
     vm_id = module.params["virtual_machine_id"]
-    url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/metrics"
-
-    params = {
+    query = {
         "date_from": module.params["date_from"],
         "date_to": module.params["date_to"]
     }
 
     try:
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code == 200:
-            module.exit_json(changed=False, metrics=response.json())
-        else:
-            module.fail_json(msg=f"Failed to fetch metrics. Status: {response.status_code}. Response: {response.text}")
-    except requests.RequestException as e:
-        module.fail_json(msg=f"Request failed: {e}")
+        metrics = client_from_module(module).get(f"/api/vps/v1/virtual-machines/{vm_id}/metrics", query=query)
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, "Fetching metrics")
+
+    module.exit_json(changed=False, metrics=metrics)
+
 
 if __name__ == '__main__':
     main()

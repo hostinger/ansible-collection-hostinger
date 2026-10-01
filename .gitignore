@@ -1,1 +1,6 @@
-*.retry.ansible/
+*.retry
+.ansible/
+__pycache__/
+hostinger-vps-*.tar.gz
+tests/output/
+tests/integration/integration_config.yml

@@ -1,0 +1,3 @@
+# Modules run on the control node (hosts: localhost) and use f-strings, which need Python 3.6+.
+modules:
+  python_requires: '>=3.6'

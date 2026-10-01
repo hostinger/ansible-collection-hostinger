@@ -8,5 +8,4 @@
         virtual_machine_id: "{{ vm_id }}"
         template_id: "{{ template_id }}"
         password: "{{ password }}"
-        public_ssh_key_id: "{{ ssh_key_id | default(omit) }}"
         post_install_script_id: "{{ script_id | default(omit) }}"

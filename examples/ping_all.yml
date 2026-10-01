@@ -10,4 +10,3 @@
     - name: Show ping results
       debug:
         var: ping_result.stdout_lines
-

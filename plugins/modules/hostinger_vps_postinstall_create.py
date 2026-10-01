@@ -1,9 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
 
 DOCUMENTATION = r"""
 ---
@@ -12,13 +19,8 @@ short_description: Create a post-install script on Hostinger VPS
 description:
   - Creates a post-install script that can be used during VPS reinstallation.
 version_added: "1.0.0"
-author: "Hostinger Dev Team"
+author: "Hostinger Dev Team (@hostinger)"
 options:
-  token:
-    description: Bearer token for Hostinger API authentication.
-    required: true
-    type: str
-    no_log: true
   name:
     description: Name for the post-install script.
     required: true
@@ -27,6 +29,8 @@ options:
     description: Shell script content to be executed after reinstall.
     required: true
     type: str
+extends_documentation_fragment:
+  - hostinger.vps.api
 """
 
 EXAMPLES = r"""
@@ -51,9 +55,10 @@ script:
   returned: on success
 """
 
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
+    module_args = api_argument_spec()
+    module_args.update(
         name=dict(type='str', required=True),
         content=dict(type='str', required=True)
     )
@@ -66,22 +71,18 @@ def main():
     if module.check_mode:
         module.exit_json(changed=True, msg="Would create post-install script in check mode.")
 
-    token = module.params["token"]
-    
-    headers = get_headers(token)
-
     payload = {
         "name": module.params['name'],
         "content": module.params['content']
     }
 
-    url = "https://developers.hostinger.com/api/vps/v1/post-install-scripts"
-    response = requests.post(url, headers=headers, json=payload)
+    try:
+        script = client_from_module(module).post("/api/vps/v1/post-install-scripts", body=payload)
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, "Creating post-install script")
 
-    if response.status_code in (200, 201):
-        module.exit_json(changed=True, msg="Post-install script created successfully.", script=response.json())
-    else:
-        module.fail_json(msg=f"Failed to create post-install script: {response.status_code} - {response.text}")
+    module.exit_json(changed=True, msg="Post-install script created successfully.", script=script)
+
 
 if __name__ == '__main__':
     main()

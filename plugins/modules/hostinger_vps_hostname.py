@@ -1,8 +1,16 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
 
 DOCUMENTATION = '''
 ---
@@ -11,10 +19,6 @@ short_description: Set or reset the hostname of a Hostinger VPS
 description:
   - Sets a custom hostname or resets it to the default along with the PTR record.
 options:
-  token:
-    description: Hostinger API token
-    required: true
-    type: str
   virtual_machine_id:
     description: ID of the VPS
     required: true
@@ -23,8 +27,10 @@ options:
     description: New hostname to set (omit to reset)
     required: false
     type: str
+extends_documentation_fragment:
+  - hostinger.vps.api
 author:
-  - Hostinger Dev Team
+  - Hostinger Dev Team (@hostinger)
 '''
 
 EXAMPLES = '''
@@ -43,38 +49,35 @@ EXAMPLES = '''
 RETURN = '''
 response:
   description: API response
+  returned: success
   type: dict
 '''
 
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
+    module_args = api_argument_spec()
+    module_args.update(
         virtual_machine_id=dict(type='int', required=True),
         hostname=dict(type='str', required=False)
     )
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=False)
 
-    token = module.params["token"]
     vm_id = module.params["virtual_machine_id"]
     hostname = module.params.get("hostname")
-
-    headers = get_headers(token)
+    url = f"/api/vps/v1/virtual-machines/{vm_id}/hostname"
 
     try:
+        client = client_from_module(module)
         if hostname:
-            url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/hostname"
-            payload = {"hostname": hostname}
-            response = requests.put(url, json=payload, headers=headers)
+            response = client.put(url, body={"hostname": hostname})
         else:
-            url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/hostname"
-            response = requests.delete(url, headers=headers)
+            response = client.delete(url)
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, "Hostname update")
 
-        response.raise_for_status()
-        module.exit_json(changed=True, response=response.json())
+    module.exit_json(changed=True, response=response)
 
-    except requests.exceptions.RequestException as e:
-        module.fail_json(msg=f"API request failed: {e}")
 
 if __name__ == '__main__':
     main()
