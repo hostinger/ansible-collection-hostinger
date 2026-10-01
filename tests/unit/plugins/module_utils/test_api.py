@@ -69,7 +69,7 @@ def test_request_encodes_query_and_returns_empty_dict_for_empty_body(open_url):
 
 
 def test_validation_error_lists_field_errors(open_url):
-    _, responses = open_url
+    responses = open_url[1]
     responses.append(http_error(422, json.dumps({
         'message': 'The protocol field is required. (and 1 more error)',
         'errors': {'protocol': ['The protocol field is required.'], 'port': ['The port field is required.']},
@@ -85,7 +85,7 @@ def test_validation_error_lists_field_errors(open_url):
 
 
 def test_non_json_error_body_is_kept_as_text(open_url):
-    _, responses = open_url
+    responses = open_url[1]
     responses.append(http_error(403, b'<html>Sorry, you have been blocked</html>'))
 
     with pytest.raises(HostingerApiError) as raised:
@@ -96,7 +96,7 @@ def test_non_json_error_body_is_kept_as_text(open_url):
 
 
 def test_network_error_has_no_status_code(open_url):
-    _, responses = open_url
+    responses = open_url[1]
     responses.append(URLError('timed out'))
 
     with pytest.raises(HostingerApiError) as raised:

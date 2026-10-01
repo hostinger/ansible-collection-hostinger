@@ -1,16 +1,8 @@
 # plugins/inventory/inventory.py
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
-
-from ansible.errors import AnsibleError
-from ansible.plugins.inventory import BaseInventoryPlugin
-from ansible_collections.hostinger.vps.plugins.module_utils.api import (
-    DEFAULT_API_URL,
-    DEFAULT_TIMEOUT,
-    HostingerApiClient,
-    HostingerApiError,
-)
 
 DOCUMENTATION = r'''
 name: inventory
@@ -47,6 +39,15 @@ EXAMPLES = r'''
 # hostinger.yml, used with HOSTINGER_API_TOKEN set in the environment
 plugin: hostinger.vps.inventory
 '''
+
+from ansible.errors import AnsibleError
+from ansible.plugins.inventory import BaseInventoryPlugin
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    DEFAULT_API_URL,
+    DEFAULT_TIMEOUT,
+    HostingerApiClient,
+    HostingerApiError,
+)
 
 
 class InventoryModule(BaseInventoryPlugin):

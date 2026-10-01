@@ -1,16 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.api import (
-    HostingerApiError,
-    api_argument_spec,
-    client_from_module,
-    fail_on_api_error,
-)
 
 DOCUMENTATION = '''
 ---
@@ -50,6 +43,14 @@ result:
   returned: always
   type: dict
 '''
+
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
 
 
 def main():
