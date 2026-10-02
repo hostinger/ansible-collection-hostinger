@@ -19,7 +19,7 @@ options:
   state:
     description:
       - Desired operation.
-      - C(get) to list available backups.
+      - C(get) to list available backups. Use M(hostinger.vps.hostinger_vps_backup_info) instead; C(get) will be removed in version 2.0.0.
       - C(delete) is no longer supported by the Hostinger API and always fails. It will be removed in version 2.0.0.
       - C(restore) to restore from a backup.
     required: true
@@ -31,6 +31,7 @@ options:
     required: false
 extends_documentation_fragment:
   - hostinger.vps.api
+  - hostinger.vps.action_wait
 author:
   - Hostinger Dev Team (@hostinger)
 '''
@@ -60,14 +61,17 @@ backup:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     HostingerApiError,
+    action_wait_argument_spec,
     api_argument_spec,
     client_from_module,
     fail_on_api_error,
+    wait_for_action_if_requested,
 )
 
 
 def main():
     module_args = api_argument_spec()
+    module_args.update(action_wait_argument_spec())
     module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         state=dict(type='str', required=True, choices=["get", "delete", "restore"]),
@@ -92,6 +96,7 @@ def main():
             data = client.get(f"/api/vps/v1/virtual-machines/{vm_id}/backups")
         else:
             data = client.post(f"/api/vps/v1/virtual-machines/{vm_id}/backups/{backup_id}/restore")
+            data = wait_for_action_if_requested(module, client, vm_id, data)
     except HostingerApiError as error:
         fail_on_api_error(module, error, f"Backup '{state}'")
 

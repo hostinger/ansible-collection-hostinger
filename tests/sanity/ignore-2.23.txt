@@ -1,4 +1,4 @@
-plugins/modules/hostinger_vps_backup.py validate-modules:parameter-state-invalid-choice # state=get kept for compatibility until 2.0.0 adds _info modules
-plugins/modules/hostinger_vps_firewall.py validate-modules:parameter-state-invalid-choice # state=get kept for compatibility until 2.0.0 adds _info modules
-plugins/modules/hostinger_vps_snapshot.py validate-modules:parameter-state-invalid-choice # state=get kept for compatibility until 2.0.0 adds _info modules
-plugins/modules/hostinger_vps_ssh_key.py validate-modules:parameter-state-invalid-choice # state=get kept for compatibility until 2.0.0 adds _info modules
+plugins/modules/hostinger_vps_backup.py validate-modules:parameter-state-invalid-choice # state=get kept for compatibility; 2.0.0 removes it in favour of the _info modules
+plugins/modules/hostinger_vps_firewall.py validate-modules:parameter-state-invalid-choice # state=get kept for compatibility; 2.0.0 removes it in favour of the _info modules
+plugins/modules/hostinger_vps_snapshot.py validate-modules:parameter-state-invalid-choice # state=get kept for compatibility; 2.0.0 removes it in favour of the _info modules
+plugins/modules/hostinger_vps_ssh_key.py validate-modules:parameter-state-invalid-choice # state=get kept for compatibility; 2.0.0 removes it in favour of the _info modules

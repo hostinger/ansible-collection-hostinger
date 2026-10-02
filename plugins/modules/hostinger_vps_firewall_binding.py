@@ -28,6 +28,7 @@ options:
     type: str
 extends_documentation_fragment:
   - hostinger.vps.api
+  - hostinger.vps.action_wait
 author:
   - Hostinger Dev Team (@hostinger)
 '''
@@ -65,14 +66,17 @@ result:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     HostingerApiError,
+    action_wait_argument_spec,
     api_argument_spec,
     client_from_module,
     fail_on_api_error,
+    wait_for_action_if_requested,
 )
 
 
 def main():
     module_args = api_argument_spec()
+    module_args.update(action_wait_argument_spec())
     module_args.update(
         firewall_id=dict(type='str', required=True),
         virtual_machine_id=dict(type='str', required=True),
@@ -86,7 +90,9 @@ def main():
     state = module.params["state"]
 
     try:
-        result = client_from_module(module).post(f"/api/vps/v1/firewall/{firewall_id}/{state}/{vm_id}")
+        client = client_from_module(module)
+        result = client.post(f"/api/vps/v1/firewall/{firewall_id}/{state}/{vm_id}")
+        result = wait_for_action_if_requested(module, client, vm_id, result)
     except HostingerApiError as error:
         fail_on_api_error(module, error, f"Firewall '{state}'")
 

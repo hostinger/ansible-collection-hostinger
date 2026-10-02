@@ -118,3 +118,70 @@ def test_get_all_pages_follows_pagination(open_url):
 def test_missing_token_is_rejected():
     with pytest.raises(HostingerApiError, match='HOSTINGER_API_TOKEN'):
         HostingerApiClient('')
+
+
+class FakeClock:
+    def __init__(self):
+        self.now = 0.0
+
+    def monotonic(self):
+        return self.now
+
+    def sleep(self, seconds):
+        self.now += seconds
+
+
+@pytest.fixture
+def clock(monkeypatch):
+    fake_clock = FakeClock()
+    monkeypatch.setattr(api, 'time', fake_clock)
+    return fake_clock
+
+
+def action_response(state):
+    return FakeResponse(json.dumps({'id': 8123, 'name': 'ct_restart', 'state': state}).encode())
+
+
+def test_wait_for_action_polls_until_success(open_url, clock):
+    calls, responses = open_url
+    responses.extend([action_response('sent'), action_response('success')])
+
+    action = HostingerApiClient('secret').wait_for_action(592873, {'id': 8123, 'state': 'created'}, timeout=60)
+
+    assert action['state'] == 'success'
+    assert [call['url'] for call in calls] == ['https://developers.hostinger.com/api/vps/v1/virtual-machines/592873/actions/8123'] * 2
+    assert clock.now == 10
+
+
+def test_wait_for_action_returns_immediately_when_already_successful(open_url, clock):
+    calls = open_url[0]
+
+    action = HostingerApiClient('secret').wait_for_action(592873, {'id': 8123, 'state': 'success'}, timeout=60)
+
+    assert action['state'] == 'success'
+    assert calls == []
+
+
+def test_wait_for_action_fails_when_the_action_fails(open_url, clock):
+    responses = open_url[1]
+    responses.append(action_response('error'))
+
+    with pytest.raises(HostingerApiError, match="action 'ct_restart' \\(8123\\) on virtual machine 592873 failed") as raised:
+        HostingerApiClient('secret').wait_for_action(592873, {'id': 8123, 'state': 'sent'}, timeout=60)
+
+    assert raised.value.response['state'] == 'error'
+
+
+def test_wait_for_action_times_out(open_url, clock):
+    calls, responses = open_url
+    responses.extend([action_response('delayed')] * 3)
+
+    with pytest.raises(HostingerApiError, match='Timed out after 12 seconds .* last state: delayed'):
+        HostingerApiClient('secret').wait_for_action(592873, {'id': 8123, 'state': 'sent'}, timeout=12)
+
+    assert len(calls) == 3
+
+
+def test_wait_for_action_needs_an_action_id(open_url, clock):
+    with pytest.raises(HostingerApiError, match='no action ID'):
+        HostingerApiClient('secret').wait_for_action(592873, {}, timeout=60)
