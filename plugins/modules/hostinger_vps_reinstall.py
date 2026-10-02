@@ -51,6 +51,7 @@ options:
     type: int
 extends_documentation_fragment:
   - hostinger.vps.api
+  - hostinger.vps.action_wait
 """
 
 EXAMPLES = r"""
@@ -78,9 +79,11 @@ action:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     HostingerApiError,
+    action_wait_argument_spec,
     api_argument_spec,
     client_from_module,
     fail_on_api_error,
+    wait_for_action_if_requested,
 )
 
 
@@ -96,6 +99,7 @@ def build_recreate_payload(params):
 
 def main():
     module_args = api_argument_spec()
+    module_args.update(action_wait_argument_spec())
     module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         template_id=dict(type='int', required=True),
@@ -122,10 +126,12 @@ def main():
     vm_id = module.params['virtual_machine_id']
 
     try:
-        action = client_from_module(module).post(
+        client = client_from_module(module)
+        action = client.post(
             f"/api/vps/v1/virtual-machines/{vm_id}/recreate",
             body=build_recreate_payload(module.params),
         )
+        action = wait_for_action_if_requested(module, client, vm_id, action)
     except HostingerApiError as error:
         fail_on_api_error(module, error, "VPS recreate")
 

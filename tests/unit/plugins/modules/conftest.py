@@ -57,14 +57,16 @@ def api(monkeypatch):
     """Replace HTTP calls with canned responses keyed by (method, path) and record every request.
 
     A response may be a callable taking (body, query), or an exception to raise.
+    status_codes sets the HTTP status of a successful response (200 by default).
     """
-    fake = SimpleNamespace(calls=[], responses={})
+    fake = SimpleNamespace(calls=[], responses={}, status_codes={})
 
     def request(self, method, path, body=None, query=None):
         fake.calls.append((method, path, body, query))
         response = fake.responses.get((method, path), {})
         if isinstance(response, Exception):
             raise response
+        self.last_status_code = fake.status_codes.get((method, path), 200)
         if callable(response):
             return response(body, query)
         return response

@@ -29,6 +29,7 @@ options:
     version_added: 1.1.0
 extends_documentation_fragment:
   - hostinger.vps.api
+  - hostinger.vps.action_wait
 author:
   - Hostinger Dev Team (@hostinger)
 '''
@@ -65,9 +66,11 @@ import ipaddress
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     HostingerApiError,
+    action_wait_argument_spec,
     api_argument_spec,
     client_from_module,
     fail_on_api_error,
+    wait_for_action_if_requested,
 )
 
 
@@ -98,6 +101,7 @@ def find_ip_address_id(virtual_machine, ip_address=None):
 
 def main():
     module_args = api_argument_spec()
+    module_args.update(action_wait_argument_spec())
     module_args.update(
         virtual_machine_id=dict(type='int', required=True),
         ptr=dict(type='str', required=False),
@@ -123,6 +127,7 @@ def main():
             response = client.post(url, body={"domain": ptr})
         else:
             response = client.delete(url)
+        response = wait_for_action_if_requested(module, client, vm_id, response)
     except HostingerApiError as error:
         fail_on_api_error(module, error, "PTR record update")
 

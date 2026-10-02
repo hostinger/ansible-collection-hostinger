@@ -15,6 +15,7 @@ options:
   state:
     description:
       - The desired state of the firewall.
+      - C(get) will be removed in version 2.0.0. Use M(hostinger.vps.hostinger_vps_firewall_info) instead.
     required: true
     type: str
     choices: [get, create, delete]

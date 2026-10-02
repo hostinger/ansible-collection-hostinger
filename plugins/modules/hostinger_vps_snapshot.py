@@ -19,7 +19,7 @@ options:
   state:
     description:
       - Desired snapshot action.
-      - C(get) fetches snapshot info.
+      - C(get) fetches snapshot info. Use M(hostinger.vps.hostinger_vps_snapshot_info) instead; C(get) will be removed in version 2.0.0.
       - C(create) creates a new snapshot.
       - C(delete) deletes the snapshot.
       - C(restore) restores from snapshot.
@@ -28,6 +28,7 @@ options:
     type: str
 extends_documentation_fragment:
   - hostinger.vps.api
+  - hostinger.vps.action_wait
 author:
   - Hostinger Dev Team (@hostinger)
 '''
@@ -68,14 +69,17 @@ snapshot:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     HostingerApiError,
+    action_wait_argument_spec,
     api_argument_spec,
     client_from_module,
     fail_on_api_error,
+    wait_for_action_if_requested,
 )
 
 
 def main():
     module_args = api_argument_spec()
+    module_args.update(action_wait_argument_spec())
     module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         state=dict(type='str', required=True, choices=["get", "create", "delete", "restore"])
@@ -101,6 +105,9 @@ def main():
             json_out = client.delete(base_url)
         else:
             json_out = client.post(base_url + "/restore")
+
+        if state != "get":
+            json_out = wait_for_action_if_requested(module, client, vm_id, json_out)
     except HostingerApiError as error:
         fail_on_api_error(module, error, f"Snapshot '{state}'")
 

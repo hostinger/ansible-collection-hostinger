@@ -15,6 +15,7 @@ options:
   state:
     description:
       - The desired state of the SSH key.
+      - C(get) will be removed in version 2.0.0. Use M(hostinger.vps.hostinger_vps_ssh_key_info) instead.
     required: true
     choices: [get, create, delete]
     type: str

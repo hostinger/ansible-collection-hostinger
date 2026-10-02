@@ -26,6 +26,7 @@ options:
     choices: [start, stop, restart]
 extends_documentation_fragment:
   - hostinger.vps.api
+  - hostinger.vps.action_wait
 author:
   - Hostinger Dev Team (@hostinger)
 '''
@@ -60,14 +61,17 @@ response:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     HostingerApiError,
+    action_wait_argument_spec,
     api_argument_spec,
     client_from_module,
     fail_on_api_error,
+    wait_for_action_if_requested,
 )
 
 
 def main():
     module_args = api_argument_spec()
+    module_args.update(action_wait_argument_spec())
     module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         action=dict(type='str', required=True, choices=['start', 'stop', 'restart'])
@@ -85,7 +89,9 @@ def main():
         module.exit_json(changed=False, msg=f"[CHECK_MODE] Would send {action} to VM {vm_id}")
 
     try:
-        response = client_from_module(module).post(f"/api/vps/v1/virtual-machines/{vm_id}/{action}")
+        client = client_from_module(module)
+        response = client.post(f"/api/vps/v1/virtual-machines/{vm_id}/{action}")
+        response = wait_for_action_if_requested(module, client, vm_id, response)
     except HostingerApiError as error:
         fail_on_api_error(module, error, f"Power action '{action}'")
 

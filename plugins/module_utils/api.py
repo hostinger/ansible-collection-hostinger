@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
+import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 
@@ -14,6 +15,8 @@ from ansible.module_utils.urls import ConnectionError as UrlsConnectionError, op
 
 DEFAULT_API_URL = "https://developers.hostinger.com"
 DEFAULT_TIMEOUT = 60
+DEFAULT_WAIT_TIMEOUT = 600
+ACTION_POLL_INTERVAL = 5
 TOKEN_ENV_VAR = "HOSTINGER_API_TOKEN"
 
 # Cloudflare in front of the API rejects requests that do not identify themselves (issue #1).
@@ -26,6 +29,14 @@ def api_argument_spec():
         token=dict(type="str", required=True, no_log=True, fallback=(env_fallback, [TOKEN_ENV_VAR])),
         api_url=dict(type="str", default=DEFAULT_API_URL),
         api_timeout=dict(type="int", default=DEFAULT_TIMEOUT),
+    )
+
+
+def action_wait_argument_spec():
+    """Options of modules that start an action; documented in the hostinger.vps.action_wait doc fragment."""
+    return dict(
+        wait=dict(type="bool", default=False),
+        wait_timeout=dict(type="int", default=DEFAULT_WAIT_TIMEOUT),
     )
 
 
@@ -108,6 +119,30 @@ class HostingerApiClient:
 
             page += 1
 
+    def wait_for_action(self, virtual_machine_id, action, timeout, interval=ACTION_POLL_INTERVAL):
+        """Poll a virtual machine action until it succeeds and return its final state.
+
+        Raises HostingerApiError when the action fails or is still running after timeout seconds.
+        """
+        if not isinstance(action, dict) or "id" not in action:
+            raise HostingerApiError(f"Cannot wait for the action: the API response has no action ID: {action}", response=action)
+
+        deadline = time.monotonic() + timeout
+        while action.get("state") != "success":
+            description = f"action '{action.get('name')}' ({action['id']}) on virtual machine {virtual_machine_id}"
+            if action.get("state") == "error":
+                raise HostingerApiError(f"The {description} failed.", response=action)
+            if time.monotonic() >= deadline:
+                raise HostingerApiError(
+                    f"Timed out after {timeout} seconds waiting for the {description}; last state: {action.get('state')}.",
+                    response=action,
+                )
+
+            time.sleep(interval)
+            action = self.get(f"/api/vps/v1/virtual-machines/{virtual_machine_id}/actions/{action['id']}")
+
+        return action
+
     @staticmethod
     def _decode(method, path, content):
         if not content:
@@ -157,6 +192,13 @@ def client_from_module(module):
         api_url=module.params["api_url"],
         timeout=module.params["api_timeout"],
     )
+
+
+def wait_for_action_if_requested(module, client, virtual_machine_id, action):
+    """Return the action as started, or its final state when the module's wait option is set."""
+    if not module.params["wait"]:
+        return action
+    return client.wait_for_action(virtual_machine_id, action, module.params["wait_timeout"])
 
 
 def fail_on_api_error(module, error, action):

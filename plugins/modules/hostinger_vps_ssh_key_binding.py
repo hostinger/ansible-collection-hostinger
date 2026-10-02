@@ -24,6 +24,7 @@ options:
     elements: int
 extends_documentation_fragment:
   - hostinger.vps.api
+  - hostinger.vps.action_wait
 author:
   - Hostinger Dev Team (@hostinger)
 '''
@@ -47,14 +48,17 @@ result:
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     HostingerApiError,
+    action_wait_argument_spec,
     api_argument_spec,
     client_from_module,
     fail_on_api_error,
+    wait_for_action_if_requested,
 )
 
 
 def main():
     module_args = api_argument_spec()
+    module_args.update(action_wait_argument_spec())
     module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         public_key_ids=dict(type='list', required=True, elements='int')
@@ -65,10 +69,12 @@ def main():
     vm_id = module.params["virtual_machine_id"]
 
     try:
-        result = client_from_module(module).post(
+        client = client_from_module(module)
+        result = client.post(
             f"/api/vps/v1/public-keys/attach/{vm_id}",
             body={"ids": module.params["public_key_ids"]},
         )
+        result = wait_for_action_if_requested(module, client, vm_id, result)
     except HostingerApiError as error:
         fail_on_api_error(module, error, "Attaching SSH keys")
 
