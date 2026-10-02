@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
@@ -12,13 +12,9 @@ short_description: List all post-install scripts on Hostinger VPS
 description:
   - Retrieves a list of all post-install scripts available in the Hostinger VPS environment.
 version_added: "1.0.0"
-author: "Hostinger Dev Team"
-options:
-  token:
-    description: Bearer token for Hostinger API authentication.
-    required: true
-    type: str
-    no_log: true
+author: "Hostinger Dev Team (@hostinger)"
+extends_documentation_fragment:
+  - hostinger.vps.api
 """
 
 EXAMPLES = r"""
@@ -33,33 +29,35 @@ EXAMPLES = r"""
 
 RETURN = r"""
 scripts:
-  description: List of post-install scripts
+  description: List of post-install scripts, collected from every page of results.
   type: list
+  elements: dict
   returned: on success
-  sample: [{"id": "abc123", "name": "Install Docker", "script": "#!/bin/bash ..."}]
+  sample: [{"id": 325, "name": "Install Docker", "content": "#!/bin/bash ..."}]
 """
 
-def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True)
-    )
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
 
+
+def main():
     module = AnsibleModule(
-        argument_spec=module_args,
+        argument_spec=api_argument_spec(),
         supports_check_mode=True
     )
 
-    token = module.params["token"]
-    
-    headers = get_headers(token
+    try:
+        scripts = client_from_module(module).get_all_pages("/api/vps/v1/post-install-scripts")
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, "Listing post-install scripts")
 
-    url = "https://developers.hostinger.com/api/vps/v1/post-install-scripts"
-    response = requests.get(url, headers=headers)
+    module.exit_json(changed=False, scripts=scripts)
 
-    if response.status_code == 200:
-        module.exit_json(changed=False, scripts=response.json())
-    else:
-        module.fail_json(msg=f"Failed to retrieve scripts: {response.status_code} - {response.text}")
 
 if __name__ == '__main__':
     main()

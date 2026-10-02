@@ -1,8 +1,9 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
@@ -11,10 +12,6 @@ short_description: Activate, deactivate, or sync firewalls on Hostinger VPS
 description:
   - Binds a firewall to a VPS (activate), removes it (deactivate), or syncs rules (sync).
 options:
-  token:
-    description: Hostinger API token
-    required: true
-    type: str
   firewall_id:
     description: Firewall ID
     required: true
@@ -29,8 +26,10 @@ options:
     required: true
     choices: [activate, deactivate, sync]
     type: str
+extends_documentation_fragment:
+  - hostinger.vps.api
 author:
-  - Hostinger Dev Team
+  - Hostinger Dev Team (@hostinger)
 '''
 
 EXAMPLES = '''
@@ -63,9 +62,18 @@ result:
   returned: always
 '''
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
+
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
+    module_args = api_argument_spec()
+    module_args.update(
         firewall_id=dict(type='str', required=True),
         virtual_machine_id=dict(type='str', required=True),
         state=dict(type='str', required=True, choices=["activate", "deactivate", "sync"])
@@ -73,25 +81,17 @@ def main():
 
     module = AnsibleModule(argument_spec=module_args)
 
-    token = module.params["token"]
     firewall_id = module.params["firewall_id"]
     vm_id = module.params["virtual_machine_id"]
     state = module.params["state"]
 
-    headers = get_headers(token)
-
-    url = f"https://developers.hostinger.com/api/vps/v1/firewall/{firewall_id}/{state}/{vm_id}"
-
     try:
-        response = requests.post(url, headers=headers)
+        result = client_from_module(module).post(f"/api/vps/v1/firewall/{firewall_id}/{state}/{vm_id}")
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, f"Firewall '{state}'")
 
-        if response.status_code in [200, 201, 202, 204]:
-            result = response.json() if response.content else {}
-            module.exit_json(changed=True, result=result)
-        else:
-            module.fail_json(msg=f"Firewall '{state}' failed. Status: {response.status_code}. Response: {response.text}")
-    except requests.RequestException as e:
-        module.fail_json(msg=f"Request failed: {e}")
+    module.exit_json(changed=True, result=result)
+
 
 if __name__ == "__main__":
     main()

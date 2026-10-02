@@ -6,6 +6,6 @@
       hostinger.vps.hostinger_vps_postinstall_create:
         token: "{{ hostinger_token }}"
         name: "Install Docker"
-        content: >
+        content: |
           #!/bin/bash
           apt update && apt install -y docker.io

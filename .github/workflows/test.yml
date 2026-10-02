@@ -1,0 +1,24 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: ${{ matrix.test }} (ansible-core ${{ matrix.ansible }})
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.ansible == 'devel' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [sanity, units]
+        # Lowest version declared in meta/runtime.yml, plus every maintained release.
+        ansible: [stable-2.13, stable-2.19, stable-2.20, stable-2.21, devel]
+    steps:
+      - uses: ansible-community/ansible-test-gh-action@release/v1
+        with:
+          ansible-core-version: ${{ matrix.ansible }}
+          testing-type: ${{ matrix.test }}

@@ -1,8 +1,9 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
@@ -10,13 +11,10 @@ module: hostinger_vps_subscription_info
 short_description: Get subscription details from Hostinger billing API
 description:
   - Retrieves a list of subscriptions associated with the Hostinger API token.
-options:
-  token:
-    description: Hostinger API token
-    required: true
-    type: str
+extends_documentation_fragment:
+  - hostinger.vps.api
 author:
-  - Hostinger Dev Team
+  - Hostinger Dev Team (@hostinger)
 '''
 
 EXAMPLES = '''
@@ -32,27 +30,25 @@ subscriptions:
   type: list
 '''
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
+
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
-    )
-
-    module = AnsibleModule(argument_spec=module_args)
-    token = module.params["token"]
-
-    headers = get_headers(token)
-
-    url = "https://developers.hostinger.com/api/billing/v1/subscriptions"
+    module = AnsibleModule(argument_spec=api_argument_spec(), supports_check_mode=True)
 
     try:
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            data = response.json()
-            module.exit_json(changed=False, subscriptions=data)
-        else:
-            module.fail_json(msg=f"Failed to fetch subscriptions. Status: {response.status_code}. Response: {response.text}")
-    except requests.RequestException as e:
-        module.fail_json(msg=f"Request failed: {e}")
+        subscriptions = client_from_module(module).get("/api/billing/v1/subscriptions")
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, "Fetching subscriptions")
+
+    module.exit_json(changed=False, subscriptions=subscriptions)
+
 
 if __name__ == '__main__':
     main()

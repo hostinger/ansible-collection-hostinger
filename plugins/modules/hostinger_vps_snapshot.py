@@ -1,8 +1,9 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
@@ -11,10 +12,6 @@ short_description: Manage Hostinger VPS snapshots
 description:
   - Get, create, delete, or restore a VPS snapshot on Hostinger.
 options:
-  token:
-    description: Hostinger API token
-    required: true
-    type: str
   virtual_machine_id:
     description: ID of the VPS
     required: true
@@ -29,8 +26,10 @@ options:
     required: true
     choices: [get, create, delete, restore]
     type: str
+extends_documentation_fragment:
+  - hostinger.vps.api
 author:
-  - Hostinger Dev Team
+  - Hostinger Dev Team (@hostinger)
 '''
 
 EXAMPLES = '''
@@ -66,9 +65,18 @@ snapshot:
   type: dict
 '''
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
+
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
+    module_args = api_argument_spec()
+    module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         state=dict(type='str', required=True, choices=["get", "create", "delete", "restore"])
     )
@@ -78,33 +86,26 @@ def main():
         supports_check_mode=False
     )
 
-    token = module.params['token']
     vm_id = module.params['virtual_machine_id']
     state = module.params['state']
 
-    headers = get_headers(token)
-
-    base_url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/snapshot"
+    base_url = f"/api/vps/v1/virtual-machines/{vm_id}/snapshot"
 
     try:
+        client = client_from_module(module)
         if state == "get":
-            resp = requests.get(base_url, headers=headers)
+            json_out = client.get(base_url)
         elif state == "create":
-            resp = requests.post(base_url, headers=headers)
+            json_out = client.post(base_url)
         elif state == "delete":
-            resp = requests.delete(base_url, headers=headers)
-        elif state == "restore":
-            resp = requests.post(base_url + "/restore", headers=headers)
+            json_out = client.delete(base_url)
         else:
-            module.fail_json(msg=f"Unknown state: {state}")
+            json_out = client.post(base_url + "/restore")
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, f"Snapshot '{state}'")
 
-        if resp.status_code in [200, 201, 202, 204]:
-            json_out = resp.json() if resp.content else {}
-            module.exit_json(changed=(state != "get"), snapshot=json_out)
-        else:
-            module.fail_json(msg=f"Snapshot '{state}' failed. Status: {resp.status_code}. Response: {resp.text}")
-    except requests.RequestException as e:
-        module.fail_json(msg=f"Request failed: {e}")
+    module.exit_json(changed=(state != "get"), snapshot=json_out)
+
 
 if __name__ == "__main__":
     main()

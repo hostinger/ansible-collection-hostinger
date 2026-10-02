@@ -1,20 +1,17 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
 module: hostinger_vps_backup
 short_description: Manage VPS backups on Hostinger
 description:
-  - Get, delete, or restore backups for a Hostinger VPS.
+  - Get or restore backups for a Hostinger VPS.
 options:
-  token:
-    description: Hostinger API token
-    required: true
-    type: str
   virtual_machine_id:
     description: ID of the VPS
     required: true
@@ -23,17 +20,19 @@ options:
     description:
       - Desired operation.
       - C(get) to list available backups.
-      - C(delete) to delete a backup.
+      - C(delete) is no longer supported by the Hostinger API and always fails. It will be removed in version 2.0.0.
       - C(restore) to restore from a backup.
     required: true
     choices: [get, delete, restore]
     type: str
   backup_id:
-    description: Required for delete/restore operations.
+    description: Required for restore operations.
     type: str
     required: false
+extends_documentation_fragment:
+  - hostinger.vps.api
 author:
-  - Hostinger Dev Team
+  - Hostinger Dev Team (@hostinger)
 '''
 
 EXAMPLES = '''
@@ -42,13 +41,6 @@ EXAMPLES = '''
     token: "{{ hostinger_token }}"
     virtual_machine_id: "{{ vm_id }}"
     state: get
-
-- name: Delete a backup
-  hostinger.vps.hostinger_vps_backup:
-    token: "{{ hostinger_token }}"
-    virtual_machine_id: "{{ vm_id }}"
-    backup_id: "{{ backup_id }}"
-    state: delete
 
 - name: Restore a backup
   hostinger.vps.hostinger_vps_backup:
@@ -65,9 +57,18 @@ backup:
   type: dict
 '''
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
+
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
+    module_args = api_argument_spec()
+    module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         state=dict(type='str', required=True, choices=["get", "delete", "restore"]),
         backup_id=dict(type='str', required=False)
@@ -75,41 +76,27 @@ def main():
 
     module = AnsibleModule(argument_spec=module_args)
 
-    token = module.params["token"]
     vm_id = module.params["virtual_machine_id"]
     state = module.params["state"]
     backup_id = module.params.get("backup_id")
 
-    headers = get_headers(token)
+    if state == "delete":
+        module.fail_json(msg="Deleting backups is no longer supported by the Hostinger API.")
+
+    if state == "restore" and not backup_id:
+        module.fail_json(msg="backup_id is required for restoring a backup.")
 
     try:
+        client = client_from_module(module)
         if state == "get":
-            url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/backups"
-            response = requests.get(url, headers=headers)
-
-        elif state == "delete":
-            if not backup_id:
-                module.fail_json(msg="backup_id is required for deleting a backup.")
-            url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/backups/{backup_id}"
-            response = requests.delete(url, headers=headers)
-
-        elif state == "restore":
-            if not backup_id:
-                module.fail_json(msg="backup_id is required for restoring a backup.")
-            url = f"https://developers.hostinger.com/api/vps/v1/virtual-machines/{vm_id}/backups/{backup_id}/restore"
-            response = requests.post(url, headers=headers)
-
+            data = client.get(f"/api/vps/v1/virtual-machines/{vm_id}/backups")
         else:
-            module.fail_json(msg="Invalid state provided.")
+            data = client.post(f"/api/vps/v1/virtual-machines/{vm_id}/backups/{backup_id}/restore")
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, f"Backup '{state}'")
 
-        if response.status_code in [200, 201, 202, 204]:
-            data = response.json() if response.content else {}
-            module.exit_json(changed=(state != "get"), backup=data)
-        else:
-            module.fail_json(msg=f"Backup '{state}' failed. Status: {response.status_code}. Response: {response.text}")
+    module.exit_json(changed=(state != "get"), backup=data)
 
-    except requests.exceptions.RequestException as e:
-        module.fail_json(msg=f"Request failed: {e}")
 
 if __name__ == '__main__':
     main()

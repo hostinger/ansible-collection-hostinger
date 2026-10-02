@@ -1,8 +1,9 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = '''
 ---
@@ -11,10 +12,6 @@ short_description: Attach public SSH keys to a Hostinger VPS
 description:
   - Attaches one or more existing public SSH keys to a specified virtual machine.
 options:
-  token:
-    description: Hostinger API token
-    required: true
-    type: str
   virtual_machine_id:
     description: The ID of the VPS to attach the key(s) to
     required: true
@@ -25,8 +22,10 @@ options:
     required: true
     type: list
     elements: int
+extends_documentation_fragment:
+  - hostinger.vps.api
 author:
-  - Hostinger Dev Team
+  - Hostinger Dev Team (@hostinger)
 '''
 
 EXAMPLES = '''
@@ -45,33 +44,36 @@ result:
   type: dict
 '''
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
+
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
+    module_args = api_argument_spec()
+    module_args.update(
         virtual_machine_id=dict(type='str', required=True),
         public_key_ids=dict(type='list', required=True, elements='int')
     )
 
     module = AnsibleModule(argument_spec=module_args)
 
-    token = module.params["token"]
     vm_id = module.params["virtual_machine_id"]
-    key_ids = module.params["public_key_ids"]
-
-    headers = get_headers(token)
-
-    url = f"https://developers.hostinger.com/api/vps/v1/public-keys/attach/{vm_id}"
-    payload = { "ids": key_ids }
 
     try:
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code in [200, 201, 202, 204]:
-            result = response.json() if response.content else {}
-            module.exit_json(changed=True, result=result)
-        else:
-            module.fail_json(msg=f"Failed to attach SSH keys. Status: {response.status_code}. Response: {response.text}")
-    except requests.RequestException as e:
-        module.fail_json(msg=f"Request failed: {e}")
+        result = client_from_module(module).post(
+            f"/api/vps/v1/public-keys/attach/{vm_id}",
+            body={"ids": module.params["public_key_ids"]},
+        )
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, "Attaching SSH keys")
+
+    module.exit_json(changed=True, result=result)
+
 
 if __name__ == '__main__':
     main()

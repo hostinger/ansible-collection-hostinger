@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.hostinger.vps.plugins.module_utils.headers import get_headers
-import requests
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
@@ -12,24 +12,21 @@ short_description: Delete a post-install script from Hostinger VPS
 description:
   - Deletes a specific post-install script using its ID.
 version_added: "1.0.0"
-author: "Hostinger Dev Team"
+author: "Hostinger Dev Team (@hostinger)"
 options:
-  token:
-    description: Bearer token for Hostinger API authentication.
-    required: true
-    type: str
-    no_log: true
   post_install_script_id:
     description: ID of the post-install script to delete.
     required: true
     type: str
+extends_documentation_fragment:
+  - hostinger.vps.api
 """
 
 EXAMPLES = r"""
 - name: Delete a post-install script
   hostinger.vps.hostinger_vps_postinstall_delete:
     token: "{{ hostinger_api_token }}"
-    post_install_script_id: "script-123"
+    post_install_script_id: "325"
 """
 
 RETURN = r"""
@@ -39,9 +36,18 @@ msg:
   returned: always
 """
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.hostinger.vps.plugins.module_utils.api import (
+    HostingerApiError,
+    api_argument_spec,
+    client_from_module,
+    fail_on_api_error,
+)
+
+
 def main():
-    module_args = dict(
-        token=dict(type='str', required=True, no_log=True),
+    module_args = api_argument_spec()
+    module_args.update(
         post_install_script_id=dict(type='str', required=True)
     )
 
@@ -53,18 +59,15 @@ def main():
     if module.check_mode:
         module.exit_json(changed=True, msg="Would delete post-install script in check mode.")
 
-    token = module.params["token"]
-    
-    headers = get_headers(token)
-
     script_id = module.params['post_install_script_id']
-    url = f"https://developers.hostinger.com/api/vps/v1/post-install-scripts/{script_id}"
-    response = requests.delete(url, headers=headers)
 
-    if response.status_code == 204:
-        module.exit_json(changed=True, msg="Post-install script deleted successfully.")
-    else:
-        module.fail_json(msg=f"Failed to delete script: {response.status_code} - {response.text}")
+    try:
+        client_from_module(module).delete(f"/api/vps/v1/post-install-scripts/{script_id}")
+    except HostingerApiError as error:
+        fail_on_api_error(module, error, "Deleting post-install script")
+
+    module.exit_json(changed=True, msg="Post-install script deleted successfully.")
+
 
 if __name__ == '__main__':
     main()
