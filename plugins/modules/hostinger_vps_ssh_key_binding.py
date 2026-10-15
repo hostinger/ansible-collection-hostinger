@@ -10,21 +10,22 @@ DOCUMENTATION = '''
 module: hostinger_vps_ssh_key_binding
 short_description: Attach public SSH keys to a Hostinger VPS
 description:
-  - Attaches one or more existing public SSH keys to a specified virtual machine.
+  - Attaches one or more public SSH keys to a specified virtual machine.
 options:
   virtual_machine_id:
     description: The ID of the VPS to attach the key(s) to
     required: true
     type: str
-  public_key_ids:
+  keys:
     description:
-      - List of public SSH key IDs to attach to the VPS
+      - The actual public keys to attach to the VPS (e.g., ssh-ed25519 AAAAC3NzaC1... user@host)
+      - Each key must be in valid OpenSSH format.
     required: true
     type: list
-    elements: int
+    elements: str
+    version_added: 1.1.0
 extends_documentation_fragment:
   - hostinger.vps.api
-  - hostinger.vps.action_wait
 author:
   - Hostinger Dev Team (@hostinger)
 '''
@@ -34,34 +35,32 @@ EXAMPLES = '''
   hostinger.vps.hostinger_vps_ssh_key_binding:
     token: "{{ hostinger_token }}"
     virtual_machine_id: "{{ vm_id }}"
-    public_key_ids:
-      - 237652
+    keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA... user@host"
 '''
 
 RETURN = '''
 result:
-  description: API response
+  description: All SSH keys now attached to the VPS.
   returned: always
-  type: dict
+  type: list
+  elements: dict
 '''
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     HostingerApiError,
-    action_wait_argument_spec,
     api_argument_spec,
     client_from_module,
     fail_on_api_error,
-    wait_for_action_if_requested,
 )
 
 
 def main():
     module_args = api_argument_spec()
-    module_args.update(action_wait_argument_spec())
     module_args.update(
         virtual_machine_id=dict(type='str', required=True),
-        public_key_ids=dict(type='list', required=True, elements='int')
+        keys=dict(type='list', required=True, elements='str', no_log=False)
     )
 
     module = AnsibleModule(argument_spec=module_args)
@@ -71,10 +70,9 @@ def main():
     try:
         client = client_from_module(module)
         result = client.post(
-            f"/api/vps/v1/public-keys/attach/{vm_id}",
-            body={"ids": module.params["public_key_ids"]},
+            f"/api/vps/v1/virtual-machines/{vm_id}/ssh-keys",
+            body={"keys": module.params["keys"]},
         )
-        result = wait_for_action_if_requested(module, client, vm_id, result)
     except HostingerApiError as error:
         fail_on_api_error(module, error, "Attaching SSH keys")
 

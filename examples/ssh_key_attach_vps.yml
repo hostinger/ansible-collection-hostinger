@@ -6,7 +6,7 @@
       hostinger.vps.hostinger_vps_ssh_key_binding:
         token: "{{ hostinger_token }}"
         virtual_machine_id: "{{ vm_id }}"
-        public_key_ids: "{{ ssh_key_ids }}"
+        keys: "{{ ssh_keys }}"
       register: result
 
     - name: Show result
