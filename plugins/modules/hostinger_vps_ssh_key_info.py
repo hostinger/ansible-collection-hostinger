@@ -27,7 +27,7 @@ EXAMPLES = r'''
 - name: Attach the key named "laptop" to a virtual machine
   hostinger.vps.hostinger_vps_ssh_key_binding:
     virtual_machine_id: 123456
-    public_key_ids: "{{ result.ssh_keys | selectattr('name', 'equalto', 'laptop') | map(attribute='id') | list }}"
+    keys: "{{ result.ssh_keys | selectattr('name', 'equalto', 'laptop') | map(attribute='key') | list }}"
 '''
 
 RETURN = r'''

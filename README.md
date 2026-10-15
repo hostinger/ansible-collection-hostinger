@@ -50,7 +50,7 @@ This collection provides Ansible modules to manage Hostinger Virtual Private Ser
 
 Every module accepts the token through the `token` option. When it is omitted, the `HOSTINGER_API_TOKEN` environment variable is used, which is also how the inventory plugin should receive it, because inventory files are not templated.
 
-Modules that start an action on a virtual machine (power, recreate, snapshots, backups, hostname, PTR, firewall binding, SSH key binding and the malware scanner) return as soon as the action is accepted. Set `wait: true` to wait until it has finished; `wait_timeout` sets the limit in seconds (600 by default).
+Modules that start an action on a virtual machine (power, recreate, snapshots, backups, hostname, PTR, firewall binding and the malware scanner) return as soon as the action is accepted. Set `wait: true` to wait until it has finished; `wait_timeout` sets the limit in seconds (600 by default).
 
 Note: A valid payment method (such as Google Pay or PayPal) added to your Hostinger account is optional, and only required when provisioning new resources through the API. If you're using this collection to manage existing VPS instances, no payment method is needed.
 
