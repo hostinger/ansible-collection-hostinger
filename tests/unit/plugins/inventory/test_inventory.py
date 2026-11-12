@@ -3,8 +3,6 @@
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-from unittest import mock
-
 import pytest
 
 from ansible.errors import AnsibleError
@@ -28,7 +26,7 @@ def vm(vm_id, hostname, **fields):
 
 @pytest.fixture
 def parse(monkeypatch):
-    """Run the plugin against a fake API response and return the inventory and the warnings it logged."""
+    """Run the plugin against a fake API response and return the inventory."""
     def run(response):
         def get(self, path, query=None):
             if isinstance(response, Exception):
@@ -40,21 +38,18 @@ def parse(monkeypatch):
         options = {'token': 'test-token', 'api_url': None, 'api_timeout': None}
         monkeypatch.setattr(InventoryModule, 'get_option', lambda self, name: options[name])
 
-        plugin = InventoryModule()
-        plugin.display = mock.Mock()
         inventory = InventoryData()
-        plugin.parse(inventory, DataLoader(), 'hostinger.yml')
-        warnings = [call.args[0] for call in plugin.display.warning.call_args_list]
-        return inventory, warnings
+        InventoryModule().parse(inventory, DataLoader(), 'hostinger.yml')
+        return inventory
 
     return run
 
 
-def test_vms_are_added_with_their_hostname_and_variables(parse):
-    inventory, warnings = parse([vm(1, 'web.example.com', plan='KVM 2', state='running', cpus=2, memory=8192, disk=102400)])
+def test_vms_are_added_by_id_with_their_variables(parse):
+    inventory = parse([vm(1, 'web.example.com', plan='KVM 2', state='running', cpus=2, memory=8192, disk=102400)])
 
-    assert list(inventory.hosts) == ['web.example.com']
-    assert inventory.get_host('web.example.com').vars == {
+    assert list(inventory.hosts) == ['srv1.hstgr.cloud']
+    assert inventory.get_host('srv1.hstgr.cloud').vars == {
         'inventory_file': None,
         'inventory_dir': None,
         'ansible_host': '10.0.0.1',
@@ -64,54 +59,36 @@ def test_vms_are_added_with_their_hostname_and_variables(parse):
         'memory': 8192,
         'disk': 102400,
         'hostinger_id': 1,
+        'hostinger_hostname': 'web.example.com',
     }
-    assert warnings == []
 
 
 def test_api_values_are_not_evaluated_as_templates(parse):
-    inventory, warnings = parse([vm(1, "{{ 7 * 7 }}", plan="{{ 6 * 7 }}")])
+    inventory = parse([vm(1, "{{ 7 * 7 }}", plan="{{ 6 * 7 }}")])
 
-    host = inventory.get_host('{{ 7 * 7 }}')
+    host = inventory.get_host('srv1.hstgr.cloud')
     templar = Templar(loader=DataLoader(), variables=dict(host.vars, inventory_hostname=host.name))
     assert templar.template(trust_as_template('{{ plan }}')) == '{{ 6 * 7 }}'
-    assert templar.template(trust_as_template('{{ inventory_hostname }}')) == '{{ 7 * 7 }}'
+    assert templar.template(trust_as_template('{{ hostinger_hostname }}')) == '{{ 7 * 7 }}'
 
 
-@pytest.mark.parametrize('hostname', ['localhost', '127.0.0.1', '::1'])
-def test_a_vm_cannot_claim_localhost(parse, hostname):
-    inventory, warnings = parse([vm(7, hostname)])
+def test_a_vm_hostname_cannot_claim_localhost_or_another_host(parse):
+    inventory = parse([vm(1, 'localhost'), vm(2, 'db.example.com'), vm(3, 'db.example.com')])
 
-    assert list(inventory.hosts) == ['srv7.hstgr.cloud']
-    assert inventory.get_host('srv7.hstgr.cloud').vars['ansible_host'] == '10.0.0.7'
-    assert warnings == [f"Hostinger VM 7 has hostname '{hostname}', which is local or shared by another VM; adding it as srv7.hstgr.cloud."]
+    assert list(inventory.hosts) == ['srv1.hstgr.cloud', 'srv2.hstgr.cloud', 'srv3.hstgr.cloud']
+    assert inventory.get_host('srv1.hstgr.cloud').vars['ansible_host'] == '10.0.0.1'
 
 
-def test_vms_sharing_a_hostname_each_get_their_own_host(parse):
-    inventory, warnings = parse([vm(1, 'db.example.com'), vm(2, 'db.example.com'), vm(3, 'web.example.com')])
+def test_entries_without_an_id_are_skipped(parse):
+    inventory = parse([vm(5, None), {'hostname': 'no-id.example.com'}, 'not a vm'])
 
-    assert list(inventory.hosts) == ['srv1.hstgr.cloud', 'srv2.hstgr.cloud', 'web.example.com']
-    assert len(warnings) == 2
-
-
-def test_a_vm_without_hostname_uses_its_default_hostname(parse):
-    inventory, warnings = parse([vm(5, None), {'hostname': ''}, 'not a vm'])
-
-    assert list(inventory.hosts) == ['srv5.hstgr.cloud', 'srvunknown.hstgr.cloud']
-    assert warnings == []
-
-
-def test_a_vm_whose_host_name_is_already_taken_is_skipped(parse):
-    inventory, warnings = parse([vm(1, 'srv2.hstgr.cloud'), vm(2, 'localhost')])
-
-    assert list(inventory.hosts) == ['srv2.hstgr.cloud']
-    assert inventory.get_host('srv2.hstgr.cloud').vars['hostinger_id'] == 1
-    assert warnings[-1] == 'Skipping Hostinger VM 2: the inventory already has a host named srv2.hstgr.cloud.'
+    assert list(inventory.hosts) == ['srv5.hstgr.cloud']
 
 
 def test_a_vm_without_ipv4_has_no_ansible_host(parse):
-    inventory, warnings = parse([{'id': 1, 'hostname': 'web.example.com', 'ipv4': []}])
+    inventory = parse([{'id': 1, 'hostname': 'web.example.com', 'ipv4': []}])
 
-    assert 'ansible_host' not in inventory.get_host('web.example.com').vars
+    assert 'ansible_host' not in inventory.get_host('srv1.hstgr.cloud').vars
 
 
 def test_api_errors_fail_the_inventory(parse):

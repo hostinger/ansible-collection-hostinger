@@ -9,6 +9,8 @@ name: inventory
 short_description: Hostinger VPS inventory plugin
 description:
   - Collects Hostinger VPS instances as dynamic Ansible inventory using the Hostinger VPS API.
+  - Each VM is added as C(srv<id>.hstgr.cloud), so its name is unique and cannot be chosen by whoever manages the VM.
+    The hostname set on the VM is available in the C(hostinger_hostname) variable.
 options:
   plugin:
     description: Token to indicate this is a Hostinger inventory plugin
@@ -40,9 +42,6 @@ EXAMPLES = r'''
 plugin: hostinger.vps.inventory
 '''
 
-from collections import Counter
-
-from ansible import constants as C
 from ansible.errors import AnsibleError
 from ansible.plugins.inventory import BaseInventoryPlugin
 from ansible.utils.unsafe_proxy import wrap_var
@@ -78,26 +77,13 @@ class InventoryModule(BaseInventoryPlugin):
         if not isinstance(vms, list):
             raise AnsibleError("Unexpected response format from Hostinger API. Expected a list of VMs.")
 
-        vms = [vm for vm in vms if isinstance(vm, dict)]
-        hostname_counts = Counter(vm.get("hostname") for vm in vms)
-
         for vm in vms:
-            # The API hostname is chosen by whoever manages the VM, so it must not claim localhost
-            # or another VM's name; such VMs fall back to their unique default hostname.
-            fallback = f"srv{vm.get('id', 'unknown')}.hstgr.cloud"
-            hostname = vm.get("hostname")
-            if not hostname or hostname in C.LOCALHOST or hostname_counts[hostname] > 1:
-                if hostname:
-                    self.display.warning(
-                        f"Hostinger VM {vm.get('id')} has hostname '{hostname}', which is local or shared by another VM; adding it as {fallback}."
-                    )
-                hostname = fallback
-            hostname = wrap_var(hostname)
-
-            if hostname in self.inventory.hosts:
-                self.display.warning(f"Skipping Hostinger VM {vm.get('id')}: the inventory already has a host named {hostname}.")
+            if not isinstance(vm, dict) or vm.get("id") is None:
                 continue
 
+            # The VM hostname is chosen by whoever manages the VM, so it could claim localhost or the name
+            # of another host; the ID-based name is unique and only the hostname variable is user-controlled.
+            hostname = wrap_var(f"srv{vm['id']}.hstgr.cloud")
             self.inventory.add_host(hostname)
 
             ipv4_list = vm.get("ipv4") or []
@@ -107,7 +93,8 @@ class InventoryModule(BaseInventoryPlugin):
 
             for name in ("plan", "state", "cpus", "memory", "disk"):
                 self._set_variable(hostname, name, vm.get(name))
-            self._set_variable(hostname, "hostinger_id", vm.get("id"))
+            self._set_variable(hostname, "hostinger_id", vm["id"])
+            self._set_variable(hostname, "hostinger_hostname", vm.get("hostname"))
 
     def _set_variable(self, hostname, name, value):
         # API values are data, never templates: mark them unsafe so Ansible does not evaluate Jinja2 in them.
