@@ -22,7 +22,7 @@ options:
   public_key_id:
     description: ID of the key to delete
     required: false
-    type: str
+    type: int
   name:
     description: Name of the SSH key (required for create)
     required: false
@@ -86,7 +86,7 @@ def main():
     module_args = api_argument_spec()
     module_args.update(
         state=dict(type='str', required=True, choices=["get", "create", "delete"]),
-        public_key_id=dict(type='str', required=False),
+        public_key_id=dict(type='int', required=False),
         name=dict(type='str', required=False),
         key=dict(type='str', required=False, no_log=False)
     )

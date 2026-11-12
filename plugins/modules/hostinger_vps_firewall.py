@@ -22,7 +22,7 @@ options:
   firewall_id:
     description: Firewall ID (required for get/delete)
     required: false
-    type: str
+    type: int
   name:
     description: Name of the firewall (required for create)
     required: false
@@ -78,7 +78,7 @@ def main():
     module_args = api_argument_spec()
     module_args.update(
         state=dict(type='str', required=True, choices=['get', 'create', 'delete']),
-        firewall_id=dict(type='str', required=False),
+        firewall_id=dict(type='int', required=False),
         name=dict(type='str', required=False)
     )
 

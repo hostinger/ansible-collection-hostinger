@@ -18,7 +18,7 @@ options:
   virtual_machine_id:
     description: ID of the virtual machine to recreate.
     required: true
-    type: str
+    type: int
   template_id:
     description: ID of the template to recreate the VPS with.
     required: true
@@ -101,7 +101,7 @@ def main():
     module_args = api_argument_spec()
     module_args.update(action_wait_argument_spec())
     module_args.update(
-        virtual_machine_id=dict(type='str', required=True),
+        virtual_machine_id=dict(type='int', required=True),
         template_id=dict(type='int', required=True),
         password=dict(type='str', required=False, no_log=True),
         panel_password=dict(type='str', required=False, no_log=True),

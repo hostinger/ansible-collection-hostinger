@@ -40,8 +40,12 @@ EXAMPLES = r'''
 plugin: hostinger.vps.inventory
 '''
 
+from collections import Counter
+
+from ansible import constants as C
 from ansible.errors import AnsibleError
 from ansible.plugins.inventory import BaseInventoryPlugin
+from ansible.utils.unsafe_proxy import wrap_var
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     DEFAULT_API_URL,
     DEFAULT_TIMEOUT,
@@ -74,21 +78,37 @@ class InventoryModule(BaseInventoryPlugin):
         if not isinstance(vms, list):
             raise AnsibleError("Unexpected response format from Hostinger API. Expected a list of VMs.")
 
+        vms = [vm for vm in vms if isinstance(vm, dict)]
+        hostname_counts = Counter(vm.get("hostname") for vm in vms)
+
         for vm in vms:
-            if not isinstance(vm, dict):
+            # The API hostname is chosen by whoever manages the VM, so it must not claim localhost
+            # or another VM's name; such VMs fall back to their unique default hostname.
+            fallback = f"srv{vm.get('id', 'unknown')}.hstgr.cloud"
+            hostname = vm.get("hostname")
+            if not hostname or hostname in C.LOCALHOST or hostname_counts[hostname] > 1:
+                if hostname:
+                    self.display.warning(
+                        f"Hostinger VM {vm.get('id')} has hostname '{hostname}', which is local or shared by another VM; adding it as {fallback}."
+                    )
+                hostname = fallback
+            hostname = wrap_var(hostname)
+
+            if hostname in self.inventory.hosts:
+                self.display.warning(f"Skipping Hostinger VM {vm.get('id')}: the inventory already has a host named {hostname}.")
                 continue
 
-            hostname = vm.get("hostname") or f"srv{vm.get('id', 'unknown')}.hstgr.cloud"
             self.inventory.add_host(hostname)
 
             ipv4_list = vm.get("ipv4") or []
             ip = ipv4_list[0]["address"] if ipv4_list and "address" in ipv4_list[0] else None
             if ip:
-                self.inventory.set_variable(hostname, "ansible_host", ip)
+                self._set_variable(hostname, "ansible_host", ip)
 
-            self.inventory.set_variable(hostname, "hostinger_id", vm.get("id"))
-            self.inventory.set_variable(hostname, "plan", vm.get("plan"))
-            self.inventory.set_variable(hostname, "state", vm.get("state"))
-            self.inventory.set_variable(hostname, "cpus", vm.get("cpus"))
-            self.inventory.set_variable(hostname, "memory", vm.get("memory"))
-            self.inventory.set_variable(hostname, "disk", vm.get("disk"))
+            for name in ("plan", "state", "cpus", "memory", "disk"):
+                self._set_variable(hostname, name, vm.get(name))
+            self._set_variable(hostname, "hostinger_id", vm.get("id"))
+
+    def _set_variable(self, hostname, name, value):
+        # API values are data, never templates: mark them unsafe so Ansible does not evaluate Jinja2 in them.
+        self.inventory.set_variable(hostname, name, wrap_var(value))

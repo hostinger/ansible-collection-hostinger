@@ -17,7 +17,7 @@ options:
   post_install_script_id:
     description: ID of the post-install script to delete.
     required: true
-    type: str
+    type: int
 extends_documentation_fragment:
   - hostinger.vps.api
 """
@@ -48,7 +48,7 @@ from ansible_collections.hostinger.vps.plugins.module_utils.api import (
 def main():
     module_args = api_argument_spec()
     module_args.update(
-        post_install_script_id=dict(type='str', required=True)
+        post_install_script_id=dict(type='int', required=True)
     )
 
     module = AnsibleModule(
