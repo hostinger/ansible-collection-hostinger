@@ -26,7 +26,7 @@ options:
       - Defaults to the only IPv4 address of the virtual machine. Required when it has more than one.
     required: false
     type: str
-    version_added: 1.1.0
+    version_added: 2.0.0
 extends_documentation_fragment:
   - hostinger.vps.api
   - hostinger.vps.action_wait

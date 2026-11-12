@@ -15,11 +15,11 @@ options:
   firewall_id:
     description: ID of the firewall to manage rules for
     required: true
-    type: str
+    type: int
   rule_id:
     description: Rule ID (required for update/delete)
     required: false
-    type: str
+    type: int
   rule:
     description:
       - Dictionary with rule parameters.
@@ -112,8 +112,8 @@ def is_valid_cidr(value):
 def main():
     module_args = api_argument_spec()
     module_args.update(
-        firewall_id=dict(type='str', required=True),
-        rule_id=dict(type='str', required=False),
+        firewall_id=dict(type='int', required=True),
+        rule_id=dict(type='int', required=False),
         rule=dict(type='dict', required=False),
         state=dict(type='str', required=True, choices=["create", "update", "delete"])
     )

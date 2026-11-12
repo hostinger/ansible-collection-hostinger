@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_firewall_info
 short_description: List Hostinger VPS firewalls
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the firewalls of the Hostinger account with their rules, or returns a single one.
 options:

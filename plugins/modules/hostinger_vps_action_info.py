@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_action_info
 short_description: List actions of a Hostinger virtual machine
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the actions (start, recreate, backup, and so on) performed on a virtual machine, newest first, or returns a
     single action.

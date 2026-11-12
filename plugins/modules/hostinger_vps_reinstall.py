@@ -18,7 +18,7 @@ options:
   virtual_machine_id:
     description: ID of the virtual machine to recreate.
     required: true
-    type: str
+    type: int
   template_id:
     description: ID of the template to recreate the VPS with.
     required: true
@@ -30,14 +30,14 @@ options:
         appear in public password leaks.
     required: false
     type: str
-    version_added: 1.1.0
+    version_added: 2.0.0
   panel_password:
     description:
       - Panel password for templates that include a control panel.
       - Same requirements as I(password).
     required: false
     type: str
-    version_added: 1.1.0
+    version_added: 2.0.0
   public_ssh_key_id:
     description:
       - No longer supported by the Hostinger API; setting it fails.
@@ -73,7 +73,7 @@ action:
   description: Action created for the recreate, which can be used to track its progress.
   type: dict
   returned: success
-  version_added: 1.1.0
+  version_added: 2.0.0
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -101,7 +101,7 @@ def main():
     module_args = api_argument_spec()
     module_args.update(action_wait_argument_spec())
     module_args.update(
-        virtual_machine_id=dict(type='str', required=True),
+        virtual_machine_id=dict(type='int', required=True),
         template_id=dict(type='int', required=True),
         password=dict(type='str', required=False, no_log=True),
         panel_password=dict(type='str', required=False, no_log=True),

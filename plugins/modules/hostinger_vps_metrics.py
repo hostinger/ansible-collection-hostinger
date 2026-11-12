@@ -16,7 +16,7 @@ options:
   virtual_machine_id:
     description: ID of the VPS to retrieve metrics for
     required: true
-    type: str
+    type: int
   date_from:
     description: ISO8601 start datetime (e.g., 2025-04-07T00:00:00Z)
     required: true
@@ -59,7 +59,7 @@ from ansible_collections.hostinger.vps.plugins.module_utils.api import (
 def main():
     module_args = api_argument_spec()
     module_args.update(
-        virtual_machine_id=dict(type='str', required=True),
+        virtual_machine_id=dict(type='int', required=True),
         date_from=dict(type='str', required=True),
         date_to=dict(type='str', required=True)
     )

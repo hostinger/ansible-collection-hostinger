@@ -15,7 +15,7 @@ options:
     virtual_machine_id:
         description: ID of the virtual machine to retrieve
         required: true
-        type: str
+        type: int
 extends_documentation_fragment:
     - hostinger.vps.api
 author:
@@ -48,7 +48,7 @@ from ansible_collections.hostinger.vps.plugins.module_utils.api import (
 def main():
     module_args = api_argument_spec()
     module_args.update(
-        virtual_machine_id=dict(type='str', required=True),
+        virtual_machine_id=dict(type='int', required=True),
     )
 
     module = AnsibleModule(

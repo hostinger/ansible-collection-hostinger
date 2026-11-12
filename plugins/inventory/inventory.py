@@ -9,6 +9,8 @@ name: inventory
 short_description: Hostinger VPS inventory plugin
 description:
   - Collects Hostinger VPS instances as dynamic Ansible inventory using the Hostinger VPS API.
+  - Each VM is added as C(srv<id>.hstgr.cloud), so its name is unique and cannot be chosen by whoever manages the VM.
+    The hostname set on the VM is available in the C(hostinger_hostname) variable.
 options:
   plugin:
     description: Token to indicate this is a Hostinger inventory plugin
@@ -27,12 +29,12 @@ options:
     description: Base URL of the Hostinger API.
     type: string
     default: https://developers.hostinger.com
-    version_added: 1.1.0
+    version_added: 2.0.0
   api_timeout:
     description: Timeout in seconds for each API request.
     type: integer
     default: 60
-    version_added: 1.1.0
+    version_added: 2.0.0
 '''
 
 EXAMPLES = r'''
@@ -42,6 +44,7 @@ plugin: hostinger.vps.inventory
 
 from ansible.errors import AnsibleError
 from ansible.plugins.inventory import BaseInventoryPlugin
+from ansible.utils.unsafe_proxy import wrap_var
 from ansible_collections.hostinger.vps.plugins.module_utils.api import (
     DEFAULT_API_URL,
     DEFAULT_TIMEOUT,
@@ -75,20 +78,24 @@ class InventoryModule(BaseInventoryPlugin):
             raise AnsibleError("Unexpected response format from Hostinger API. Expected a list of VMs.")
 
         for vm in vms:
-            if not isinstance(vm, dict):
+            if not isinstance(vm, dict) or vm.get("id") is None:
                 continue
 
-            hostname = vm.get("hostname") or f"srv{vm.get('id', 'unknown')}.hstgr.cloud"
+            # The VM hostname is chosen by whoever manages the VM, so it could claim localhost or the name
+            # of another host; the ID-based name is unique and only the hostname variable is user-controlled.
+            hostname = wrap_var(f"srv{vm['id']}.hstgr.cloud")
             self.inventory.add_host(hostname)
 
             ipv4_list = vm.get("ipv4") or []
             ip = ipv4_list[0]["address"] if ipv4_list and "address" in ipv4_list[0] else None
             if ip:
-                self.inventory.set_variable(hostname, "ansible_host", ip)
+                self._set_variable(hostname, "ansible_host", ip)
 
-            self.inventory.set_variable(hostname, "hostinger_id", vm.get("id"))
-            self.inventory.set_variable(hostname, "plan", vm.get("plan"))
-            self.inventory.set_variable(hostname, "state", vm.get("state"))
-            self.inventory.set_variable(hostname, "cpus", vm.get("cpus"))
-            self.inventory.set_variable(hostname, "memory", vm.get("memory"))
-            self.inventory.set_variable(hostname, "disk", vm.get("disk"))
+            for name in ("plan", "state", "cpus", "memory", "disk"):
+                self._set_variable(hostname, name, vm.get(name))
+            self._set_variable(hostname, "hostinger_id", vm["id"])
+            self._set_variable(hostname, "hostinger_hostname", vm.get("hostname"))
+
+    def _set_variable(self, hostname, name, value):
+        # API values are data, never templates: mark them unsafe so Ansible does not evaluate Jinja2 in them.
+        self.inventory.set_variable(hostname, name, wrap_var(value))

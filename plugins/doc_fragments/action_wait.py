@@ -16,11 +16,11 @@ options:
         not finish within I(wait_timeout).
     type: bool
     default: false
-    version_added: 1.1.0
+    version_added: 2.0.0
   wait_timeout:
     description:
       - Maximum number of seconds to wait when I(wait=true).
     type: int
     default: 600
-    version_added: 1.1.0
+    version_added: 2.0.0
 '''

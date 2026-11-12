@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_ssh_key_info
 short_description: List public SSH keys of a Hostinger account
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the public SSH keys stored in the Hostinger account, collected from all pages of results.
   - Attach keys to a virtual machine with M(hostinger.vps.hostinger_vps_ssh_key_binding).

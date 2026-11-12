@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_vm_info
 short_description: List Hostinger virtual machines
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the virtual machines of the Hostinger account, or returns a single one.
 options:

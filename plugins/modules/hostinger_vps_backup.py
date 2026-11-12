@@ -15,7 +15,7 @@ options:
   virtual_machine_id:
     description: ID of the VPS
     required: true
-    type: str
+    type: int
   state:
     description:
       - Desired operation.
@@ -27,7 +27,7 @@ options:
     type: str
   backup_id:
     description: Required for restore operations.
-    type: str
+    type: int
     required: false
 extends_documentation_fragment:
   - hostinger.vps.api
@@ -73,9 +73,9 @@ def main():
     module_args = api_argument_spec()
     module_args.update(action_wait_argument_spec())
     module_args.update(
-        virtual_machine_id=dict(type='str', required=True),
+        virtual_machine_id=dict(type='int', required=True),
         state=dict(type='str', required=True, choices=["get", "delete", "restore"]),
-        backup_id=dict(type='str', required=False)
+        backup_id=dict(type='int', required=False)
     )
 
     module = AnsibleModule(argument_spec=module_args)

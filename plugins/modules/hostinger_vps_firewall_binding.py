@@ -15,11 +15,11 @@ options:
   firewall_id:
     description: Firewall ID
     required: true
-    type: str
+    type: int
   virtual_machine_id:
     description: Virtual Machine ID
     required: true
-    type: str
+    type: int
   state:
     description:
       - Action to perform on the binding.
@@ -78,8 +78,8 @@ def main():
     module_args = api_argument_spec()
     module_args.update(action_wait_argument_spec())
     module_args.update(
-        firewall_id=dict(type='str', required=True),
-        virtual_machine_id=dict(type='str', required=True),
+        firewall_id=dict(type='int', required=True),
+        virtual_machine_id=dict(type='int', required=True),
         state=dict(type='str', required=True, choices=["activate", "deactivate", "sync"])
     )
 

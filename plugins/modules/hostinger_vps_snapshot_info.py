@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_snapshot_info
 short_description: Get the snapshot of a Hostinger virtual machine
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Returns the snapshot of a virtual machine. A virtual machine has at most one snapshot.
   - Create, delete or restore the snapshot with M(hostinger.vps.hostinger_vps_snapshot).

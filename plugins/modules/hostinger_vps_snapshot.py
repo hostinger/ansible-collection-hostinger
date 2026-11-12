@@ -15,7 +15,7 @@ options:
   virtual_machine_id:
     description: ID of the VPS
     required: true
-    type: str
+    type: int
   state:
     description:
       - Desired snapshot action.
@@ -81,7 +81,7 @@ def main():
     module_args = api_argument_spec()
     module_args.update(action_wait_argument_spec())
     module_args.update(
-        virtual_machine_id=dict(type='str', required=True),
+        virtual_machine_id=dict(type='int', required=True),
         state=dict(type='str', required=True, choices=["get", "create", "delete", "restore"])
     )
 

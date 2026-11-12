@@ -16,7 +16,7 @@ options:
     description:
       - The ID of the VPS instance to perform the action on.
     required: true
-    type: str
+    type: int
   action:
     description:
       - The power action to perform on the VPS.
@@ -73,7 +73,7 @@ def main():
     module_args = api_argument_spec()
     module_args.update(action_wait_argument_spec())
     module_args.update(
-        virtual_machine_id=dict(type='str', required=True),
+        virtual_machine_id=dict(type='int', required=True),
         action=dict(type='str', required=True, choices=['start', 'stop', 'restart'])
     )
 

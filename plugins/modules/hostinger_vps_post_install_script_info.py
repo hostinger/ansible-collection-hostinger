@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_post_install_script_info
 short_description: List post-install scripts of a Hostinger account
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the post-install scripts of the Hostinger account, or returns a single one.
 options:

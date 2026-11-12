@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_data_center_info
 short_description: List Hostinger VPS data centers
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the data centers a new virtual machine can be set up in.
 extends_documentation_fragment:

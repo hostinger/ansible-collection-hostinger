@@ -15,7 +15,7 @@ options:
   virtual_machine_id:
     description: The ID of the VPS to attach the key(s) to
     required: true
-    type: str
+    type: int
   keys:
     description:
       - The actual public keys to attach to the VPS (e.g., ssh-ed25519 AAAAC3NzaC1... user@host)
@@ -23,7 +23,7 @@ options:
     required: true
     type: list
     elements: str
-    version_added: 1.1.0
+    version_added: 2.0.0
 extends_documentation_fragment:
   - hostinger.vps.api
 author:
@@ -59,7 +59,7 @@ from ansible_collections.hostinger.vps.plugins.module_utils.api import (
 def main():
     module_args = api_argument_spec()
     module_args.update(
-        virtual_machine_id=dict(type='str', required=True),
+        virtual_machine_id=dict(type='int', required=True),
         keys=dict(type='list', required=True, elements='str', no_log=False)
     )
 
