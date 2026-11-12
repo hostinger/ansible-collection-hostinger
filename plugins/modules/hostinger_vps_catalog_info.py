@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_catalog_info
 short_description: List products in the Hostinger catalog
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the products that can be purchased, with their prices.
   - The C(id) of a price, for example C(hostingercom-vps-kvm2-usd-1m), is the I(item_id) used to purchase it.

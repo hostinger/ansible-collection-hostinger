@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_backup_info
 short_description: List backups of a Hostinger virtual machine
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the backups of a virtual machine, collected from all pages of results.
   - Restore a backup with M(hostinger.vps.hostinger_vps_backup).

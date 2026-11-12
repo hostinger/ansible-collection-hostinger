@@ -4,7 +4,7 @@ Hostinger Collection Release Notes
 
 .. contents:: Topics
 
-v1.1.0
+v2.0.0
 ======
 
 Breaking Changes

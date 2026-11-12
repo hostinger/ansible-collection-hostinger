@@ -9,7 +9,7 @@ DOCUMENTATION = r'''
 ---
 module: hostinger_vps_template_info
 short_description: List Hostinger VPS OS templates
-version_added: 1.1.0
+version_added: 2.0.0
 description:
   - Lists the OS templates a virtual machine can be set up or recreated with, or returns a single one.
 options:

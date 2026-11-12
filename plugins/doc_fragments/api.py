@@ -20,11 +20,11 @@ options:
       - Base URL of the Hostinger API.
     type: str
     default: https://developers.hostinger.com
-    version_added: 1.1.0
+    version_added: 2.0.0
   api_timeout:
     description:
       - Timeout in seconds for each API request.
     type: int
     default: 60
-    version_added: 1.1.0
+    version_added: 2.0.0
 '''

@@ -23,7 +23,7 @@ options:
     required: true
     type: list
     elements: str
-    version_added: 1.1.0
+    version_added: 2.0.0
 extends_documentation_fragment:
   - hostinger.vps.api
 author:
